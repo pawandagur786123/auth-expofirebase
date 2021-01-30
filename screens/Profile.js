@@ -1,52 +1,57 @@
-import React from 'react'
+import React, {useState, useEffect} from 'react'
 import { View, TextInput, StyleSheet, Text,Button, TouchableOpacity } from 'react-native'
 import Firebase, { db } from '../config/Firebase'
+import { useNavigation } from '@react-navigation/native';
 
-class Profile extends React.Component {
-    constructor(props){
-        super(props)
-        this.state = {
-            name:'',
-            email:'',
-            age:'',
-            uid:''
-        }
-    }
-    handleSignout = () => {
+function Profile(props){
+    const [form, setForm] = useState({
+                                name:'',
+                                email:'',
+                                age:'',
+                                uid:''
+                                })
+    const navigation = useNavigation();
+    console.log("navigation")
+    console.log(navigation)
+    console.log("props")
+    console.log(props)
+
+    const handleSignout = () => {
         Firebase.auth().signOut()
-        this.props.navigation.navigate('Login')
+        navigation.navigate('Login')
     }
 
-    componentDidMount(){
-        this.getLocalValues()
-    }
-
-    async getLocalValues(){
-        if(this.props.route.params && Object.keys(this.props.route.params).indexOf('uid') > -1){
-            var uid = this.props.route.params.uid
-            try {
-                const user = await db
-                    .collection('users')
-                    .doc(uid)
-                    .get()
-                this.setState({
-                    name:user.data().name,
-                    email:user.data().email,
-                    age:user.data().age,
-                    uid: uid
-                })
-            } catch (e) {
-                alert(e)
+    useEffect(() => {
+        async function getLocalValues(){
+            if(props.route.params && Object.keys(props.route.params).indexOf('uid') > -1){
+                var uid = props.route.params.uid
+                try {
+                    const user = await db
+                        .collection('users')
+                        .doc(uid)
+                        .get()
+                    setForm({
+                        name:user.data().name,
+                        email:user.data().email,
+                        age:user.data().age,
+                        uid: uid
+                    })
+                } catch (e) {
+                    alert(e)
+                }
             }
         }
-    }
+        getLocalValues()
+    },[])
 
-    updateUser() {
-        const updateDBRef = db.collection('users').doc(this.state.uid);
+    
+
+   const updateUser = () => {
+        const updateDBRef = db.collection('users').doc(form.uid);
         updateDBRef.set({
-          name: this.state.name,
-          email: this.state.email,
-          age: this.state.age,
+          name: form.name,
+          email: form.email,
+          age: form.age,
         }).then(() => {
             alert("Updated Successfully")
         })
@@ -55,42 +60,38 @@ class Profile extends React.Component {
         });
       }
 
-    
-    render() {
-        const { name,email,age } = this.state
         return (
             <View style={styles.container}>
                     <View style={styles.box}> 
                         <View style={{marginBottom:15}}>    
-                            <Text style={styles.fontStyle}>Email : {email}</Text>
+                            <Text style={styles.fontStyle}>Email : {form.email}</Text>
                         </View>                    
                         <View style={styles.input}>
                             <Text style={styles.fontStyle}>Name : </Text>
                             <TextInput
                             style={[styles.fontStyle],{ height: 40, borderColor: 'transparent', borderWidth: 1 }}
-                            onChangeText={name => this.setState({name})}
-                            value = {name?name : ''}
+                            onChangeText={name => setForm({...form, name})}
+                            value = {form.name? form.name : ''}
                             />
                         </View>
                         <View style={styles.input}>
                             <Text style={styles.fontStyle}>Age : </Text> 
                             <TextInput
                             style={[styles.fontStyle],{ height: 40, borderColor: 'transparent', borderWidth: 1 }}
-                            onChangeText={(age) => {this.setState({age})}}
-                            value = {age ? age : ''}
+                            onChangeText={(age) => setForm({...form, age})}
+                            value = {form.age ? form.age : ''}
                             />
                         </View>
                         <TouchableOpacity 
                             style={styles.button} 
-                            onPress={()=>this.updateUser()}>
+                            onPress={updateUser}>
                         <Text style={styles.buttonText}>Submit</Text>
                         </TouchableOpacity>
                     </View>
-                <Button title='Logout' onPress={this.handleSignout} />
+                <Button title='Logout' onPress={handleSignout} />
             </View>
         )
     }
-}
 
 const styles = StyleSheet.create({
     container: {

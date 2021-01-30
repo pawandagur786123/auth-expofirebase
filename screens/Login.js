@@ -1,50 +1,46 @@
-import React from 'react'
+import React, {useState} from 'react'
 import { View, TextInput, StyleSheet, TouchableOpacity, Text, Button } from 'react-native'
 import Firebase from '../config/Firebase'
+import { useNavigation } from '@react-navigation/native';
 
-class Login extends React.Component {
-    state = {
-        email: '',
-        password: ''
-    }
-    
-    handleLogin = () => {
-        const { email, password } = this.state
+function Login(){
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
+    const navigation = useNavigation();
+    const handleLogin = () => {
         Firebase.auth()
             .signInWithEmailAndPassword(email, password)
-            .then((response) => {this.props.navigation.navigate('Profile', {uid : response.user.uid})})
+            .then((response) => {navigation.navigate('Profile', {uid : response.user.uid})})
             .catch(error => console.log(error))
     }
 
-    render() {
         return (
             <View style={styles.container}>
                 <TextInput
                     style={styles.inputBox}
-                    value={this.state.email}
-                    onChangeText={email => this.setState({ email })}
+                    value={email}
+                    onChangeText={email => setEmail(email)}
                     placeholder='Email'
                     autoCapitalize='none'
                 />
                 <TextInput
                     style={styles.inputBox}
-                    value={this.state.password}
-                    onChangeText={password => this.setState({ password })}
+                    value={password}
+                    onChangeText={password => setPassword(password)}
                     placeholder='Password'
                     secureTextEntry={true}
                 />
                 <TouchableOpacity 
                         style={styles.button} 
-                        onPress={this.handleLogin}>
+                        onPress={handleLogin}>
                     <Text style={styles.buttonText}>Login</Text>
                 </TouchableOpacity>
                 <Button
                     title="Don't have an account yet? Sign up"
-                    onPress={() => this.props.navigation.navigate('Signup')}
+                    onPress={() => navigation.navigate('Signup')}
                 />
             </View>
         )
-    }
 }
 
 const styles = StyleSheet.create({

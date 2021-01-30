@@ -1,84 +1,78 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { View, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native'
 import Firebase, { db } from '../config/Firebase.js'
+import { useNavigation } from '@react-navigation/native';
 
-
-class Signup extends React.Component {
-    state = {
-        name: '',
-        email: '',
-        password: '',
-        age:''
-    }
-
-    handleSignUp = () => {
-        const { name, email, password, age  } = this.state
-        var regex = /\d/g;
-        var allnums = (/^[0-9]+$/) 
-        if(regex.test(name)){
-            return alert("Names don't include numbers.")
+function Signup() {
+    const [form, setForm] = useState({
+        name : '',
+        email : '',
+        password : '',
+        age : ''
+    }) 
+    const navigation = useNavigation();
+    const handleSignUp = () => {
+            var regex = /\d/g;
+            var allnums = (/^[0-9]+$/) 
+            if(regex.test(form.name)){
+                return alert("Names don't include numbers.")
+            }
+            if(!allnums.test(form.age)){
+                return alert("Age don't include letters.")
+            }
+            Firebase.auth()
+                .createUserWithEmailAndPassword(form.email, form.password)
+                .then((response) => {
+                        const user = {
+                            name: form.name,
+                            uid: response.user.uid,
+                            email: form.email,
+                            age:form.age
+                        }
+                        db.collection('users')
+                            .doc(response.user.uid)
+                            .set(user)
+                        navigation.navigate('Profile',{uid:response.user.uid})
+                    })
+                .catch(error => {
+                    alert(error.message)
+                })       
         }
-        if(allnums.test(age)){
-            return alert("Age don't include letters.")
-        }
-        Firebase.auth()
-            .createUserWithEmailAndPassword(email, password)
-            .then((response) => {
-                    const user = {
-                        name: name,
-                        uid: response.user.uid,
-                        email: email,
-                        age:age
-                    }
-                    db.collection('users')
-                        .doc(response.user.uid)
-                        .set(user)
-                    this.props.navigation.navigate('Profile',{uid:response.user.uid})
-                })
-            .catch(error => {
-                alert(error.message)
-            })
-            
-    }
-
-
-    render() {
         return (
             <View style={styles.container}>
                 <TextInput
                     style={styles.inputBox}
-                    value={this.state.name}
-                    onChangeText={name => this.setState({ name })}
+                    value={form.name}
+                    onChangeText={name => setForm({...form, name})}
                     placeholder='Full Name'
                 />
                 <TextInput
                     style={styles.inputBox}
-                    value={this.state.email}
-                    onChangeText={email => this.setState({ email })}
+                    value={form.email}
+                    onChangeText={email => setForm({...form,email })}
                     placeholder='Email'
                     autoCapitalize='none'
                 />
                 <TextInput
                     style={styles.inputBox}
-                    value={this.state.password}
-                    onChangeText={password => this.setState({ password })}
+                    value={form.password}
+                    onChangeText={password => setForm({...form, password})}
                     placeholder='Password'
                     secureTextEntry={true}
                 />
                 <TextInput
                     style={styles.inputBox}
-                    value={this.state.age}
-                    onChangeText={age => this.setState({ age })}
+                    value={form.age}
+                    onChangeText={age => setForm({...form, age})}
                     placeholder='AGE'
                     autoCapitalize='none'
                     keyboardType={'numeric'}
                 />
-                <TouchableOpacity style={styles.button} onPress={this.handleSignUp}>
+                <TouchableOpacity style={styles.button} onPress={handleSignUp}>
                     <Text style={styles.buttonText}>Signup</Text>
                 </TouchableOpacity>
             </View>
         )
-    }
 }
 
 const styles = StyleSheet.create({
